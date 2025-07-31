@@ -73,9 +73,7 @@ public class Personnel {
     @OneToMany(mappedBy = "uploadedBy", cascade = CascadeType.ALL, orphanRemoval = true)
     List<File> files;
 
-    @OneToMany(mappedBy = "sender")
+    @OneToMany(mappedBy = "sender") // Người gửi
     List<Notification> sentNotifications = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "recipients")
-    List<Notification> receivedNotifications = new ArrayList<>();
 }

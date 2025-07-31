@@ -6,19 +6,22 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.experimental.FieldDefaults;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
-@Entity
-@Builder
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity
 @Table(name = "notifications")
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -34,18 +37,10 @@ public class Notification {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm - dd/MM/yyyy")
     LocalDateTime createdAt;
 
-    @ManyToMany
-    @JoinTable(
-            name = "notification_recipient",
-            joinColumns = @JoinColumn(name = "notification_id"),
-            inverseJoinColumns = @JoinColumn(name = "personnel_id")
-    )
-    List<Personnel> recipients = new ArrayList<>();
-
     @ManyToOne
     @JoinColumn(name = "sender_id")
     Manager sender;
 
     @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<NotificationStatus> notificationStatuses = new ArrayList<>();
+    List<NotificationStatus> notificationStatuses = new ArrayList<>();
 }

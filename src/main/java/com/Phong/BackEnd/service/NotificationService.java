@@ -52,9 +52,10 @@ public class NotificationService {
         if (managedDepartment == null) {
             throw new RuntimeException("Manager does not manage any department");
         }
+
         List<Employee> employeesInDepartment = employeeRepository.findAllEmployees().stream()
                 .filter(employee -> managedDepartment.equals(employee.getDepartment()))
-                .collect(Collectors.toList());
+                .toList();
 
         List<Employee> recipients;
         if (request.isSendToAll()) {
@@ -64,6 +65,7 @@ public class NotificationService {
                     .filter(employee -> request.getRecipientIds().contains(employee.getCode()))
                     .collect(Collectors.toList());
         }
+
         if (recipients.isEmpty()) {
             throw new RuntimeException("No valid recipients found in the department");
         }
@@ -72,29 +74,29 @@ public class NotificationService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .sender(sender)
-                .recipients(new ArrayList<>(recipients))
                 .createdAt(LocalDateTime.now())
                 .build();
 
         notificationRepository.save(notification);
 
-        recipients.forEach(recipient -> {
+        // Gán notificationStatus cho từng người nhận
+        List<NotificationStatus> statuses = new ArrayList<>();
+        for (Employee recipient : recipients) {
             NotificationStatus status = NotificationStatus.builder()
                     .notification(notification)
                     .employee(recipient)
                     .isRead(false)
                     .build();
-            notificationStatusRepository.save(status);
-        });
+            statuses.add(status);
+        }
+
+        notificationStatusRepository.saveAll(statuses);
+        notification.setNotificationStatuses(statuses);
 
         recipients.forEach(recipient -> {
             String email = recipient.getEmail();
             if (email != null && !email.isEmpty()) {
-                sendEmail(
-                        email,
-                        request.getTitle(),
-                        request.getContent()
-                );
+                sendEmail(email, request.getTitle(), request.getContent());
             }
         });
 
@@ -111,15 +113,17 @@ public class NotificationService {
                                 .code(sender.getCode())
                                 .name(sender.getFirstName() + " " + sender.getLastName())
                                 .build())
-                        .recipients(recipients.stream().map(r -> PersonnelInfo.builder()
+                        .recipients(recipients.stream()
+                                .map(r -> PersonnelInfo.builder()
                                         .code(r.getCode())
                                         .name(r.getFirstName() + " " + r.getLastName())
                                         .build())
-                                .collect(Collectors.toList()))
+                                .toList())
                         .createdAt(notification.getCreatedAt().format(formatter))
                         .build())
                 .build();
     }
+
 
     public ApiResponse<List<GetNotiResponse>> getMyNotifications(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)

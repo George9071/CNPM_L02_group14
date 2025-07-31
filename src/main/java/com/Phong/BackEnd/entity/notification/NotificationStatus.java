@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class NotificationStatus {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,3 +29,4 @@ public class NotificationStatus {
     @Column(nullable = false)
     private boolean isRead;
 }
+
